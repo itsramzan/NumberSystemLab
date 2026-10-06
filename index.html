@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Number System Lab — HSC ICT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hdr">
+  <div>
+    <h1>Number System Lab <span class="badge">HSC ICT</span></h1>
+    <p>HSC ICT • Convert • Calculate • Understand</p>
+  </div>
+  <div class="tools">
+    <button id="themeBtn" class="icon" aria-label="Change theme" title="Theme">◐</button>
+    <button id="helpBtn" class="icon" aria-label="Help and shortcuts" title="Help">?</button>
+    <button id="histBtn" class="icon" aria-label="History" title="History">⟲</button>
+    <button id="resetBtn" class="icon" aria-label="Reset" title="Reset">↺</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Modes">
+  <button role="tab" data-tab="converter" class="on">Converter</button>
+  <button role="tab" data-tab="calculator">Calculator</button>
+  <button role="tab" data-tab="solver">Step Solver</button>
+  <button role="tab" data-tab="practice">Quick Practice</button>
+  <button role="tab" data-tab="history">History</button>
+  <button role="tab" data-tab="reference">Reference</button>
+</nav>
+
+<main>
+<section id="converter" class="tab on">
+  <div class="card">
+    <label for="cvIn">Enter Number</label>
+    <div class="row">
+      <input id="cvIn" class="big mono" value="101101.101" autocomplete="off" spellcheck="false">
+      <span id="cvTag" class="tag"></span>
+    </div>
+    <div class="grid3">
+      <div><label for="cvFrom">From Base</label><select id="cvFrom" class="bsel" data-def="2"></select><input type="number" min="2" max="36" value="20" hidden aria-label="Custom source base (2 to 36)"></div>
+      <button id="swap" class="btn swap" data-act="swap" aria-label="Swap bases" title="Swap bases">⇄</button>
+      <div><label for="cvTo">To Base</label><select id="cvTo" class="bsel" data-def="10"></select><input type="number" min="2" max="36" value="20" hidden aria-label="Custom target base (2 to 36)"></div>
+    </div>
+    <div class="row wrap">
+      <label class="inl">Max fractional digits <select id="cvMax" class="maxsel"></select></label>
+      <button id="cvGo" class="btn pri" data-act="convert">Convert</button>
+      <button class="btn" data-act="cvclear">Clear</button>
+      <button class="btn" data-act="keypad">Keypad</button>
+    </div>
+    <div id="keypad" class="keypad" hidden></div>
+  </div>
+  <div id="cvOut"></div>
+  <button class="btn" data-act="another">Try another number →</button>
+  <div class="grid2 gap">
+    <div class="card formula"><h4>Positional number system</h4><p class="mono">N = dₙbⁿ + dₙ₋₁bⁿ⁻¹ + … + d₀b⁰</p><p class="mono">Fraction: d₋₁b⁻¹ + d₋₂b⁻² + …</p></div>
+    <div class="card formula"><h4>Decimal → other base</h4><p class="mono">Integer: repeated division</p><p class="mono">Fraction: repeated multiplication</p></div>
+  </div>
+  <details class="card why"><summary>Why does this work? (কেন কাজ করে?)</summary>
+    <p>প্রতিটি Number System-এর একটি Base থাকে।<br>Binary → Base 2, Octal → Base 8, Decimal → Base 10, Hexadecimal → Base 16।</p>
+    <p>একটি সংখ্যার প্রতিটি digit-এর position অনুযায়ী base-এর power ব্যবহার করা হয়। যেমন 101₂ = 1×2² + 0×2¹ + 1×2⁰ = 5।</p>
+    <p>Binary ↔ Octal/Hex shortcut: 8 = 2³ এবং 16 = 2⁴, তাই 3 bit = 1 octal digit, 4 bit = 1 hex digit।</p>
+  </details>
+</section>
+
+<section id="calculator" class="tab">
+  <div class="card">
+    <div id="ops"></div>
+    <div class="row wrap">
+      <button class="btn" data-act="addop">+ Add operand</button>
+      <label class="inl">Operation <select id="clOp"><option value="+">+ Add</option><option value="-">− Subtract</option><option value="×">× Multiply</option><option value="÷">÷ Divide</option></select></label>
+    </div>
+    <div class="grid3">
+      <div><label for="clTo">Result Base</label><select id="clTo" class="bsel" data-def="2"></select><input type="number" min="2" max="36" value="20" hidden aria-label="Custom result base (2 to 36)"></div>
+      <div><label for="clMax">Max fractional digits</label><select id="clMax" class="maxsel"></select></div>
+      <button class="btn pri" data-act="calc">Calculate</button>
+    </div>
+  </div>
+  <div id="clOut"></div>
+</section>
+
+<section id="solver" class="tab"><div id="svOut"></div></section>
+
+<section id="practice" class="tab">
+  <div class="card">
+    <div class="row wrap">
+      <label class="inl">Difficulty <select id="pLevel"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
+      <button class="btn pri" data-act="newq">New question</button>
+      <span id="score" class="tag">Score 0 / 0</span>
+    </div>
+    <p id="pQ" class="big">Press “New question” to start.</p>
+    <label for="pAns">Your Answer</label>
+    <div class="row"><input id="pAns" class="mono big" autocomplete="off" spellcheck="false"><button class="btn pri" data-act="check">Check</button></div>
+  </div>
+  <div id="pOut"></div>
+</section>
+
+<section id="history" class="tab"><div id="hsOut"></div></section>
+<section id="reference" class="tab"><div id="refOut"></div></section>
+</main>
+
+<dialog id="helpDlg">
+  <h2>Keyboard shortcuts</h2>
+  <ul>
+    <li><kbd>Enter</kbd> Convert</li>
+    <li><kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> Calculate</li>
+    <li><kbd>Ctrl/Cmd</kbd> + <kbd>K</kbd> Focus main input</li>
+    <li><kbd>Esc</kbd> Close this window</li>
+  </ul>
+  <p>Digits allowed: 0–9 then A–Z (base 36 max). Use “.” for fractions and “-” for negatives.</p>
+  <button class="btn pri" data-act="closehelp">Close</button>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="script.js"></script>
+</body>
+</html>

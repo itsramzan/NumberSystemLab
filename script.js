@@ -5,9 +5,9 @@
  * Rational arithmetic keeps everything exact; only non-terminating
  * results are cut at "max fractional digits" and flagged Approximate. */
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const SUBS = '₀₁₂₃₄₅₆₇₈₉', SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const SUBS = '\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089', SUPS = '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079';
 const sub = n => String(n).replace(/\d/g, d => SUBS[d]);
-const sup = n => String(n).replace(/\d/g, d => SUPS[d]).replace('-', '⁻');
+const sup = n => String(n).replace(/\d/g, d => SUPS[d]).replace('-', '\u207b');
 const NAMES = { 2: 'Binary', 8: 'Octal', 10: 'Decimal', 16: 'Hexadecimal' };
 const baseName = b => NAMES[b] || `Base ${b}`;
 class MathError extends Error {}
@@ -180,17 +180,22 @@ function performOperation(operands, op, outBase, maxF = 10) {
 /* ===================== UI ===================== */
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+// Fonts often lack subscript/superscript digit glyphs (shown as boxes), so display them as real <sub>/<sup> tags.
+const SUB_RE = new RegExp(`[${SUBS}]+`, 'g'), SUP_RE = new RegExp(`[\u207b${SUPS}]+`, 'g');
+const rich = s => esc(s)
+  .replace(SUB_RE, m => `<sub>${[...m].map(c => SUBS.indexOf(c)).join('')}</sub>`)
+  .replace(SUP_RE, m => `<sup>${[...m].map(c => (c === '\u207b' ? '−' : SUPS.indexOf(c))).join('')}</sup>`);
 const state = { last: null, q: null, score: { r: 0, t: 0 } };
 const store = { get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
 function toast(msg = '✓ Copied to clipboard') { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1600); }
 const errHtml = e => `<div class="err" role="alert">${e instanceof MathError ? '⚠ ' + esc(e.message.replace(/^⚠ /, '')).replace(/\n/g, '<br>') : '⚠ Something went wrong. Please check your input.'}</div>`;
-const stepsHtml = steps => `<h3>Step-by-step solution</h3>` + steps.map(s => `<details open class="step${s.hl ? ' hl' : ''}"><summary>${esc(s.title)}</summary><pre>${esc(s.lines.join('\n'))}</pre></details>`).join('');
+const stepsHtml = steps => `<h3>Step-by-step solution</h3>` + steps.map(s => `<details open class="step${s.hl ? ' hl' : ''}"><summary>${rich(s.title)}</summary><pre>${rich(s.lines.join('\n'))}</pre></details>`).join('');
 const stepsText = r => r.steps.map(s => s.title + '\n' + s.lines.join('\n')).join('\n\n');
 
 function showResult(r, el) {
   state.last = r;
-  el.innerHTML = `<div class="card result"><div class="eq mono"><span>${esc(r.inputText)}</span><i>=</i><b>${esc(r.resultText)}</b></div>
+  el.innerHTML = `<div class="card result"><div class="eq mono"><span>${rich(r.inputText)}</span><i>=</i><b>${rich(r.resultText)}</b></div>
     <p class="${r.exact ? 'ok' : 'warn'}">${r.exact ? '✓ Exact' : '≈ Approximate result'}</p>
     <div class="row wrap"><button class="btn" data-act="copyR">Copy result</button><button class="btn" data-act="copyS">Copy solution</button></div></div>${stepsHtml(r.steps)}`;
 }
@@ -242,7 +247,7 @@ function doCalc() {
 function saveHistory(r) { const h = store.get('nsl-history', []); h.unshift({ t: Date.now(), k: r.operation, i: r.inputText, r: r.resultText, a: r.args }); store.set('nsl-history', h.slice(0, 100)); }
 function renderHistory() {
   const h = store.get('nsl-history', []);
-  $('#hsOut').innerHTML = h.length ? `<button class="btn" data-act="clearh">Clear all</button>` + h.map((x, i) => `<div class="card hsi"><div><div class="mono">${esc(x.i)} = <b>${esc(x.r)}</b></div><small>${esc(x.k)} • ${new Date(x.t).toLocaleString()}</small></div><div class="row">${x.a ? `<button class="btn" data-act="reuse" data-i="${i}">Reuse</button>` : ''}<button class="btn" data-act="copyH" data-i="${i}">Copy</button><button class="btn" data-act="delh" data-i="${i}">Delete</button></div></div>`).join('') : '<div class="card">No history yet. Convert or calculate something first.</div>';
+  $('#hsOut').innerHTML = h.length ? `<button class="btn" data-act="clearh">Clear all</button>` + h.map((x, i) => `<div class="card hsi"><div><div class="mono">${rich(x.i)} = <b>${rich(x.r)}</b></div><small>${esc(x.k)} • ${new Date(x.t).toLocaleString()}</small></div><div class="row">${x.a ? `<button class="btn" data-act="reuse" data-i="${i}">Reuse</button>` : ''}<button class="btn" data-act="copyH" data-i="${i}">Copy</button><button class="btn" data-act="delh" data-i="${i}">Delete</button></div></div>`).join('') : '<div class="card">No history yet. Convert or calculate something first.</div>';
 }
 
 /* practice */
@@ -265,14 +270,14 @@ function newQuestion() {
       Object.assign(q, { to, prompt: `Calculate (${a})${sub(ba)} ${op} (${b})${sub(bb)} and give the answer in ${lo(to)}.`, res: performOperation([{ text: a, base: ba }, { text: b, base: bb }], op, to, 20) });
     }
   }
-  state.q = q; $('#pQ').textContent = q.prompt; $('#pAns').value = ''; $('#pOut').innerHTML = ''; $('#pAns').focus();
+  state.q = q; $('#pQ').innerHTML = rich(q.prompt); $('#pAns').value = ''; $('#pOut').innerHTML = ''; $('#pAns').focus();
 }
 function checkAnswer() {
   const q = state.q, out = $('#pOut'); if (!q) return;
   try {
     const u = toRat(parseNumber($('#pAns').value, q.to)), c = toRat(parseNumber(q.res.result, q.to)), ok = u.n === c.n && u.d === c.d;
     if (!q.done) { q.done = true; state.score.t++; if (ok) state.score.r++; $('#score').textContent = `Score ${state.score.r} / ${state.score.t}`; }
-    out.innerHTML = `<div class="card"><p class="${ok ? 'ok' : 'warn'}"><b>${ok ? '✓ Correct' : '✗ Not quite'}</b></p><p>Correct answer: <b class="mono">${esc(q.res.resultText)}</b></p></div>` + stepsHtml(q.res.steps);
+    out.innerHTML = `<div class="card"><p class="${ok ? 'ok' : 'warn'}"><b>${ok ? '✓ Correct' : '✗ Not quite'}</b></p><p>Correct answer: <b class="mono">${rich(q.res.resultText)}</b></p></div>` + stepsHtml(q.res.steps);
   } catch (e) { out.innerHTML = errHtml(e); }
 }
 
